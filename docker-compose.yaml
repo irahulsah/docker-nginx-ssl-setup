@@ -8,8 +8,13 @@ services:
     build:
       dockerfile: Dockerfile
       context: ./nginx
+    
     ports:
       - '80:80'
+      - '443:443'
+    volumes:
+      - ./config/opt/certs/:/etc/ssl/private
+
   react_client:
     build:
       context: ./client
@@ -32,7 +37,24 @@ services:
       - /app/node_modules # Inside the container, don't try to override this folder, just leave as is
     env_file:
       - ./env/backend.env
- 
+
+
+  letsencrypt:
+    image: linuxserver/swag
+    container_name: letsencrypt
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+      - URL=aziostore.tk
+      - SUBDOMAINS=wildcard,
+      - VALIDATION=dns
+      - DNSPLUGIN=route53
+      - EMAIL=irahulsah306@gmail.com
+      - DHLEVEL=4096
+    volumes:
+      - ./config/opt/:/config
+    restart: unless-stopped
   mongo:
     container_name: mongo-db-demo
     image: mongo
@@ -41,8 +63,7 @@ services:
     
     volumes: 
       - mongo-data:/data/db
-
 volumes:
     mongo-data:
       driver: local
-  
+    
